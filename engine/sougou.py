@@ -7,6 +7,7 @@ from multiprocessing import Pool
 import re
 import codecs
 import sys
+from six.moves import range
 reload(sys)
 sys.setdefaultencoding("utf-8")
 from termcolor import colored
