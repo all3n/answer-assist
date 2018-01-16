@@ -14,11 +14,12 @@ ocr:
     baidu:
     ~/.config/answer_assist.conf
 
-    ```
+    python-sdk
+    https://ai.baidu.com/download?sdkId=3
 
+```
 [baidu-ocr]
 api_id=xxx
 api_key=xxx
 api_secret=xxx
-
-    ```
+```

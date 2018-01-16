@@ -44,8 +44,8 @@ ocr_client = None
 options = {"language_type": "CHN_ENG"}
 
 #芝士超人参数
-height_begin = 347
-height_end = -600
+height_begin = 180
+height_end = -450
 
 num_choises = 3
 # 从图片中识别文字, image为图片bytes, 图片裁剪需调参
@@ -54,12 +54,11 @@ def get_text_from_image(image):
   if not ocr_client:
     ocr_client = AipOcr(appId=app_id, apiKey=app_key, secretKey=app_secret)
     ocr_client.setConnectionTimeoutInMillis(timeout * 1000)
-  #result = ocr_client.basicGeneral(image, options)
-  #if 'error_code' in result:
-  #  print('baidu api error: ', result['error_msg'])
-  #  return ''
-  #return result["words_result"]
-  return ""
+  result = ocr_client.basicGeneral(image, options)
+  if 'error_code' in result:
+    print('baidu api error: ', result['error_msg'])
+    return ''
+  return result["words_result"]
 
 def parse_question_and_answers(words):
   question = ''.join([word['words'] \
@@ -111,20 +110,20 @@ def _parser_single_answer(answer):
     return None
   answer_box = line_split
   answer_box += '\n'
-  answer_box += '\x1b[33m>>>\x1b[0m '
+  answer_box += '>>>'
   answer_box += high_light_question(''.join(map(str, question_desc.contents)))
   answer_box += '\n'
   texts = answer.find_all("div", {"class": "str-text-info"})
   for text in texts:
     text_str = str(text)
-    if '问题说明' in text_str:
+    if u'问题说明' in text_str:
       continue
     span = text.find("span")
     if not span:
       continue
     answer_desc = high_light_answer(''.join(map(str, span.contents)))
-    if '最佳答案' in text_str:
-      answer_desc = '\x1b[1m\x1b[32m最佳答案: \x1b[0m' + answer_desc
+    if u'最佳答案' in text_str:
+      answer_desc = u'最佳答案: %s' % answer_desc
     answer_box += answer_desc
   return answer_box
 
@@ -147,14 +146,16 @@ def run_job(screen):
   print('asking new question...')
   start = time.time()
   qa_image = get_qa_image(screen)
+
+
   text = get_text_from_image(qa_image)
   question, choices = parse_question_and_answers(text)
 
-  print('\x1b[1m\x1b[35m 问题: \x1b[0m',  question)
+  print(u'问题:%s'%  question)
   query = question.strip('?') + ' ' + ' '.join(choices)
   html = sogou_search(query)
   parse_answers(html)
-  print('use {0} 秒'.format(time.time() - start))
+  print(u'use {0} 秒'.format(time.time() - start))
   with open('./question-choices', 'a+') as out_file:
     out_file.write(query + '\n')
 
@@ -164,6 +165,10 @@ def main():
   global pre_head_wb
   screen = get_screen()
   qc_box = screen[height_begin:height_end]
+
+  with open("a.png","w") as cut:
+      cut.write(qc_box)
+
   if qc_box.mean() < 180:
     return
   if type(pre_head_wb).__name__ == 'NoneType':
@@ -175,19 +180,19 @@ def main():
   if type(pre_head_wb).__name__ == 'ndarray':
     diff = np.mean(np.abs(pre_head_wb - head_wb))
     if diff > 2.0:
-      print('diff: ', diff)
-      print('invoke...')
-      #run_job(screen)
-  print('invoke...')
+      print(u'diff:%s ' % diff)
+      print(u'invoke...')
+      run_job(screen)
   pre_head_wb = head_wb
 
 if __name__ == '__main__':
   while True:
     try:
       main()
+      break
       time.sleep(0.5)
     except Exception as e:
       print(str(e))
     except KeyboardInterrupt:
-      print('欢迎下次使用')
+      print(u'欢迎下次使用')
       sys.exit()
