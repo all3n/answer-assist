@@ -1,0 +1,6 @@
+PyYAML==3.12
+jieba==0.39
+termcolor==1.1.0
+bs4==0.0.1
+six==1.11.0
+termcolor==1.1.0

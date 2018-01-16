@@ -10,10 +10,18 @@ def clean(s):
 def clean_list(l):
     return map(lambda x:clean(x),l)
 
+
+
+def question_pre_process(qs):
+    now = datetime.today()
+
+
+
 def gen_qa(sens_list,choice=3):
     assert(len(sens_list) > choice)
 
     q = "".join(clean_list(sens_list[:-choice]))
+
     a = clean_list(sens_list[-choice:])
 
     return QA(q,a)

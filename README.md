@@ -8,6 +8,7 @@ python:
     1. six
     1. BeautifulSoup4
     1. baidu ocr
+    1. imobiledevice
 
 
 ocr:
