@@ -128,16 +128,6 @@ def _parser_single_answer(answer):
   return answer_box
 
 def get_screen():
-  # os.system("adb shell /system/bin/screencap -p /sdcard/screenshot.png")
-  # os.system("adb pull /sdcard/screenshot.png ./screenshot.png")
-  # return cv2.imread('./screenshot.png', cv2.IMREAD_GRAYSCALE)
-
-  # directly read image bytes from pipe
-
-  #pipe = subprocess.Popen("adb shell screencap -p",
-  #                        stdin=subprocess.PIPE,
-  #                        stdout=subprocess.PIPE, shell=True)
-  #image_bytes = pipe.stdout.read().replace(b'\r\n', b'\n')
 
   image_bytes = ios.get_screen_data()
   return cv2.imdecode(np.fromstring(image_bytes, np.uint8), cv2.IMREAD_GRAYSCALE)
