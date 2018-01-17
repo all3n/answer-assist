@@ -22,13 +22,14 @@ class sogou_qe(object):
     def sogou_search(self,question):
         prefix = 'https://www.sogou.com/web?query='
         url = prefix + parse.quote(question.encode('utf-8'))
+        url = url + " " + parse.quote(" ".join(self.a).encode('utf-8'))
         req = urllib.request.Request(url=url, headers=self.headers)
         res = urllib.request.urlopen(req, timeout=3)
         if res.getcode() != 200:
             print('search error, error code: ', res.getcode()  )
         return res.read().decode('utf-8')
 
-    def resolve(self,q):
+    def resolve(self,qa):
         self.q = qa.question
         self.a = qa.answer
         self.vote = {}
@@ -61,7 +62,8 @@ class sogou_qe(object):
             # title
             title = at.find("h3",{"class","vrTitle"})
             if title:
-                self.clean_res(title.text)
+                title = self.clean_res(title.text)
+                print(u"title:%s" % title )
             content = at.find("div",{"class","strBox"})
             if content:
                 clean_txt = self.clean_res(content.text)
@@ -71,19 +73,20 @@ class sogou_qe(object):
                     self.count_freq(clean_txt,i)
                     clean_txt = clean_txt.replace(self.a[i],colored(self.a[i],"red"))
 
-                print clean_txt
+                print(u"content:%s" % clean_txt)
             print "---------------------------------------"
 
         total = sum(self.vote.values())
-        right = max(self.vote)
-        for x in range(len(self.a)):
-            if x in self.vote:
-                print self.a[x]
-                print(u"%s, %.2f %%" % (self.a[x],(self.vote[x] * 100.0) /total))
-            else:
-                print(u"%s,%.2f %%" % (self.a[x],0))
-        print '------------------------------------------------'
-        print(u"%d:%s" % (right,self.a[right]))
+        if self.vote:
+            right = max(self.vote)
+            for x in range(len(self.a)):
+                if x in self.vote:
+                    print self.a[x]
+                    print(u"%s, %.2f %%" % (self.a[x],(self.vote[x] * 100.0) /total))
+                else:
+                    print(u"%s,%.2f %%" % (self.a[x],0))
+            print '------------------------------------------------'
+            print(u"%d:%s" % (right,self.a[right]))
 
 
         # multi processors
