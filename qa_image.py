@@ -5,8 +5,8 @@ def decode_from_bytes(image_bytes):
     return cv2.imdecode(np.fromstring(image_bytes, np.uint8), cv2.IMREAD_GRAYSCALE)
 
 def decode_from_file(ifile):
-    test_img_bytes = cv2.imread(ifile, cv2.IMREAD_GRAYSCALE)
-    return test_img_bytes
+    img_bytes = cv2.imread(ifile, cv2.IMREAD_GRAYSCALE)
+    return img_bytes
 
 
 # gen qa cut image str

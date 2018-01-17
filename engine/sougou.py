@@ -58,12 +58,15 @@ class sogou_qe(object):
         search_result = soup.find("div", {"class": "results"})
         answers = search_result.find_all("div", {"class": "vrwrap"})
 
+        n = 0
         for at in answers:
+            if n > 3:
+                break
             # title
             title = at.find("h3",{"class","vrTitle"})
             if title:
                 title = self.clean_res(title.text)
-                print(u"title:%s" % title )
+                print(u"%d title:%s" % (n,title))
             content = at.find("div",{"class","strBox"})
             if content:
                 clean_txt = self.clean_res(content.text)
@@ -73,8 +76,9 @@ class sogou_qe(object):
                     self.count_freq(clean_txt,i)
                     clean_txt = clean_txt.replace(self.a[i],colored(self.a[i],"red"))
 
-                print(u"content:%s" % clean_txt)
+                print(u"%d content:%s" % (n,clean_txt))
             print "---------------------------------------"
+            n += 1
 
         total = sum(self.vote.values())
         if self.vote:
