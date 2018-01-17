@@ -9,11 +9,10 @@ import cv2
 from qa_image import *
 from question import *
 from engine.sougou import sogou_qe
+from engine.baidu import baidu_qe
 from ConfigParser import ConfigParser
 from six.moves import input
 
-screen_begin = 180
-screen_end = -450
 
 sys.setrecursionlimit(1000000)
 
@@ -34,6 +33,7 @@ class answer_assist(object):
         self.parser.add_argument('--os',type=str,help='device os type android|ios',default="ios")
         self.parser.add_argument('--img',type=str,help='input-img answer',default=None)
         self.parser.add_argument('--q',type=str,help='input question file',default=None)
+        self.parser.add_argument('-t',type=int,help='game type 1 xigua,2 zhishi',default=1)
         self.args = self.parser.parse_args()
         return self.args
 
@@ -45,7 +45,7 @@ class answer_assist(object):
         return qa
 
     def try_answer(self,screen):
-        img_arr = get_qa_image(screen,screen_begin,screen_end)
+        img_arr = get_qa_image(screen,self.screen_begin,self.screen_end)
         if img_arr.mean() < 180:
             return
         head_wb = cv2.Canny(img_arr[:int(img_arr.shape[0] / 3)], 40, 60)
@@ -75,18 +75,25 @@ class answer_assist(object):
         args = self.build_args()
         os_type = args.os
         conf = self.load_config()
+        if args.t == 1:
+            self.screen_begin = 180
+            self.screen_end = -460
+        elif args.t == 2:
+            self.screen_begin = 180
+            self.screen_end = -550
 
         from ocr import baidu
         self.ocr = baidu.baidu_ocr(conf)
         self.gen_device(os_type)
-        self.qe = sogou_qe()
+        #self.qe = sogou_qe()
+        self.qe = baidu_qe()
 
         if args.img:
             img_nd = decode_from_file(args.img)
             if type(img_nd).__name__ != 'ndarray':
                 print("error not img")
                 return
-            img_arr = get_qa_image(img_nd,screen_begin,screen_end)
+            img_arr = get_qa_image(img_nd,self.screen_begin,self.screen_end)
             qa = self.ocr_img_to_qa(img_arr)
             self.qe.resolve(qa)
             return
