@@ -14,6 +14,8 @@ class ios_device(base_device):
         except imobiledevice.iDeviceError as e:
             print(e)
             return None
+        if not devices:
+            return None
         uuid = devices[0]
         lck = LockdownClient(iDevice(uuid))
         sc = lck.get_service_client(ScreenshotrClient)
