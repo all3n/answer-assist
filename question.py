@@ -27,9 +27,12 @@ def load_qa_from_file(f):
 
 
 def gen_qa(sens_list,choice=3,right=-1):
+    print "\n".join(sens_list)
     assert(len(sens_list) > choice)
+
     q = "".join(clean_list(sens_list[:-choice]))
     a = clean_list(sens_list[-choice:])
+
 
     qa = QA(q,a,right)
     print_qa(qa)

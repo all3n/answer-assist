@@ -1,5 +1,5 @@
 import sys
-from base_device import base_device
+from .base_device import base_device
 import imobiledevice
 from imobiledevice import iDevice
 from imobiledevice import LockdownClient

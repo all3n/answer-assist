@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
+
 from six.moves import urllib
 from six.moves.urllib import parse
 from bs4 import BeautifulSoup
@@ -7,7 +8,7 @@ from multiprocessing import Pool
 import codecs
 import sys
 from six.moves import range
-from search_engine import search_engine
+from .search_engine import search_engine
 reload(sys)
 sys.setdefaultencoding("utf-8")
 from termcolor import colored
@@ -40,7 +41,7 @@ class sogou_qe(search_engine):
                     clean_txt = clean_txt.replace(self.a[i],colored(self.a[i],"red"))
 
                 print(u"content:%s" % (clean_txt))
-            print "---------------------------------------"
+            print("---------------------------------------")
 
 
 

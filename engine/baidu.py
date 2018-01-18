@@ -10,7 +10,7 @@ from six.moves import range
 reload(sys)
 sys.setdefaultencoding("utf-8")
 from termcolor import colored
-from search_engine import search_engine
+from .search_engine import search_engine
 
 line_split = "=" * 50
 
@@ -36,8 +36,8 @@ class baidu_qe(search_engine):
                     self.count_freq(op_answer_txt,i,10)
 
 
-        if self.vote:
-            return
+        #if self.vote:
+        #    return
 
         answers = search_result.find_all("div", {"class": "result"})[:self.top_n]
 
@@ -61,7 +61,7 @@ class baidu_qe(search_engine):
                     clean_txt = clean_txt.replace(self.a[i],colored(self.a[i],"red"))
 
                 print(u"content:%s" % (clean_txt))
-            print "---------------------------------------"
+            print("---------------------------------------")
 
 if __name__ == '__main__':
     import sys

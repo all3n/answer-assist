@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from ocr import ocr
+from .ocr import ocr
 from aip import AipOcr
 
 # disable warning of not https
