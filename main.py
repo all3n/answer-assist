@@ -18,8 +18,8 @@ sys.setrecursionlimit(1000000)
 
 class answer_assist(object):
     pre_head_wb = None
-    def load_config(self):
-        conf_file = os.path.expanduser("~/.config/answer_assist.conf")
+    def load_config(self,conf_file):
+        conf_file = os.path.expanduser(conf_file)
         if not os.path.exists(conf_file):
             print("%s not exits" % conf_file)
             sys.exit(-1)
@@ -30,10 +30,12 @@ class answer_assist(object):
 
     def build_args(self):
         self.parser = argparse.ArgumentParser()
-        self.parser.add_argument('--os',type=str,help='device os type android|ios',default="ios")
-        self.parser.add_argument('--img',type=str,help='input-img answer',default=None)
-        self.parser.add_argument('--q',type=str,help='input question file',default=None)
-        self.parser.add_argument('-t',type=int,help='game type 1 xigua,2 zhishi',default=1)
+        self.parser.add_argument('-o','--os',type=str,help='device os type android|ios',default="ios")
+        self.parser.add_argument('-i','--img',type=str,help='input-img answer',default=None)
+        self.parser.add_argument('-q','--question',type=str,help='input question file',default=None)
+        self.parser.add_argument('-t','--game_type',type=int,help='game type 1 xigua,2 zhishi',default=1)
+        self.parser.add_argument('-m','--method',type=int,help='0 auto 1 manual',default=0)
+        self.parser.add_argument('-c','--config',type=str,help='custom config file default:~/.config/answer_assist.conf',default='~/.config/answer_assist.conf')
         self.args = self.parser.parse_args()
         return self.args
 
@@ -44,15 +46,17 @@ class answer_assist(object):
         qa = gen_qa(text_list)
         return qa
 
-    def try_answer(self,screen):
-        img_arr = get_qa_image(screen,self.screen_begin,self.screen_end)
+    def try_answer(self,img_arr):
         if img_arr.mean() < 180:
             return
         head_wb = cv2.Canny(img_arr[:int(img_arr.shape[0] / 3)], 40, 60)
         if type(self.pre_head_wb).__name__ == 'ndarray':
             diff = np.mean(np.abs(self.pre_head_wb - head_wb))
             if diff > 2.0:
-                qa = self.ocr_img_to_qa(img_arr)
+                # if question change,wait 0.8 s fix xiguan
+                time.sleep(0.8)
+                screen_cut_nd = self.get_screen_cut_nd()
+                qa = self.ocr_img_to_qa(screen_cut_nd)
                 self.qe.resolve(qa)
         self.pre_head_wb = head_wb
 
@@ -71,14 +75,23 @@ class answer_assist(object):
             self.device = android.android_device()
 
 
+    def get_screen_cut_nd(self):
+        screen = self.device.get_screen()
+        if screen == None:
+            raise IOError("device error,check your device is connected!!!")
+        screen_nd = decode_from_bytes(screen)
+        cut_img_arr = get_qa_image(screen_nd,self.screen_begin,self.screen_end)
+        return cut_img_arr
+
     def main(self):
         args = self.build_args()
         os_type = args.os
-        conf = self.load_config()
-        if args.t == 1:
+        conf = self.load_config(args.config)
+        game_type = args.game_type
+        if game_type == 1:
             self.screen_begin = 180
             self.screen_end = -460
-        elif args.t == 2:
+        elif game_type == 2:
             self.screen_begin = 180
             self.screen_end = -550
 
@@ -98,20 +111,20 @@ class answer_assist(object):
             self.qe.resolve(qa)
             return
 
-        if args.q:
-            print("%s" % args.q)
-            qa = load_qa_from_file(args.q)
+        question = args.question
+        if question:
+            print("%s" % question)
+            qa = load_qa_from_file(question)
             self.qe.resolve(qa)
             return
 
         while True:
-            #if not self.wait_for_key():break
+            if args.method == 1:
+                if not self.wait_for_key():break
             try:
-                screen = self.device.get_screen()
-                if not screen:
-                    continue
-                screen_nd = decode_from_bytes(screen)
-                self.try_answer(screen_nd)
+                screen_cut_nd = self.get_screen_cut_nd()
+                self.try_answer(screen_cut_nd)
+
             except Exception as e:
                 print(str(e))
             time.sleep(0.5)

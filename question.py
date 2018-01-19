@@ -5,6 +5,10 @@ from terminaltables import AsciiTable
 from six.moves import xrange
 import codecs
 QA = namedtuple('QA', ['question', 'answer','right'])
+import re
+
+
+QA_INDEX_PATTERN = re.compile("\d+/\d+")
 
 
 def clean(s):
@@ -29,6 +33,11 @@ def load_qa_from_file(f):
 def gen_qa(sens_list,choice=3,right=-1):
     print "\n".join(sens_list)
     assert(len(sens_list) > choice)
+
+    # TODO remove question index num like 1/12
+    last = sens_list[-1]
+    if QA_INDEX_PATTERN.match(last):
+        sens_list = sens_list[:-1]
 
     q = "".join(clean_list(sens_list[:-choice]))
     a = clean_list(sens_list[-choice:])
