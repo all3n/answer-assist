@@ -14,9 +14,9 @@ class baidu_ocr(ocr):
     timeout = 3
     def __init__(self,conf):
         super(baidu_ocr,self).__init__(conf)
-        self.app_id = conf.get(self.baidu_ocr_sec,"api_id")
-        self.app_key = conf.get(self.baidu_ocr_sec,"api_key")
-        self.app_secret = conf.get(self.baidu_ocr_sec,"api_secret")
+        self.app_id = str(conf[self.baidu_ocr_sec]["api_id"])
+        self.app_key = conf[self.baidu_ocr_sec]["api_key"]
+        self.app_secret = conf[self.baidu_ocr_sec]["api_secret"]
         self.ocr_client = AipOcr(appId=self.app_id, apiKey=self.app_key, secretKey=self.app_secret)
         self.ocr_client.setConnectionTimeoutInMillis(self.timeout * 1000)
 
@@ -27,27 +27,3 @@ class baidu_ocr(ocr):
             return None
         ret = result["words_result"]
         return map(lambda x:x['words'],ret)
-
-
-
-
-
-
-if __name__ == '__main__':
-    import os
-    import cv2
-    import ConfigParser
-    import sys
-    if len(sys.argv) !=2 :
-        print("need image")
-        sys.exit(-1)
-    conf_file = os.path.expanduser("~/.config/answer_assist.conf")
-    conf = ConfigParser.ConfigParser()
-    conf.read(conf_file)
-    test_img = os.path.expanduser(sys.argv[1])
-    test_img_bytes = cv2.imread(test_img, cv2.IMREAD_GRAYSCALE)
-    p_bytes = cv2.imencode('.png', test_img_bytes[180:-450])[1].tostring()
-
-    ret = baidu_ocr(conf).detext_text(p_bytes)
-    print("\n".join(ret))
-

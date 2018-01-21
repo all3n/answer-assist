@@ -23,11 +23,11 @@
 ## ocr:
     1. baidu ocr:
         1. 配置文件:~/.config/answer_assist.conf
-```                                                                        
-    [baidu-ocr]
-    api_id=
-    api_key=
-    api_secret=
+```
+baidu-ocr:
+    api_id: YOUR_BAIDU_API_ID
+    api_key: YOUR_BAIDU_API_KEY
+    api_secret: YOUR_BAIDU_API_SECRET
 ```
     1. python-sdk
         1. https://ai.baidu.com/download?sdkId=3

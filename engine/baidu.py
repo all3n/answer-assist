@@ -49,6 +49,7 @@ class baidu_qe(search_engine):
                 print(u"title:%s" % (title))
             content = at.find("div",{"class","c-abstract"})
             if content:
+                [s.extract() for s in content(['a'])]
                 clean_txt = self.clean_res(content.text)
                 if not clean_txt:
                     continue

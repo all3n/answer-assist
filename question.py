@@ -4,8 +4,9 @@ from collections import namedtuple
 from terminaltables import AsciiTable
 from six.moves import xrange
 import codecs
-QA = namedtuple('QA', ['question', 'answer','right'])
+QA = namedtuple('QA', ['question', 'answer','answer_tokens','right'])
 import re
+import jieba
 
 
 QA_INDEX_PATTERN = re.compile("\d+/\d+")
@@ -41,9 +42,11 @@ def gen_qa(sens_list,choice=3,right=-1):
 
     q = "".join(clean_list(sens_list[:-choice]))
     a = clean_list(sens_list[-choice:])
+    answer_tokens = map(lambda x:jieba.cut(x),a)
 
 
-    qa = QA(q,a,right)
+
+    qa = QA(q,a,answer_tokens,right)
     print_qa(qa)
     return qa
 

@@ -5,7 +5,9 @@ import sys
 import argparse
 import os
 import time
+import yaml
 import cv2
+import jieba
 from qa_image import *
 from question import *
 from engine.sougou import sogou_qe
@@ -26,6 +28,15 @@ class answer_assist(object):
         self.conf = ConfigParser()
         self.conf.read(conf_file)
         return self.conf
+    def load_yaml(self,yaml_file):
+        conf_file = os.path.expanduser(yaml_file)
+        if not os.path.exists(conf_file):
+            print("%s not exits" % conf_file)
+            sys.exit(-1)
+
+        with open(conf_file,"r") as yf:
+            return yaml.load(yf)
+        return {}
 
 
     def build_args(self):
@@ -35,7 +46,8 @@ class answer_assist(object):
         self.parser.add_argument('-q','--question',type=str,help='input question file',default=None)
         self.parser.add_argument('-t','--game_type',type=int,help='game type 1 xigua,2 zhishi',default=1)
         self.parser.add_argument('-m','--method',type=int,help='0 auto 1 manual',default=0)
-        self.parser.add_argument('-c','--config',type=str,help='custom config file default:~/.config/answer_assist.conf',default='~/.config/answer_assist.conf')
+        self.parser.add_argument('-cc','--custom_config',type=str,help='custom api config file default:~/.config/answer_assist.conf',default='~/.config/answer_assist.conf')
+        self.parser.add_argument('-c','--config',type=str,help='custom config file default:conf/app.ini',default='conf/app.ini')
         self.args = self.parser.parse_args()
         return self.args
 
@@ -57,7 +69,17 @@ class answer_assist(object):
                 time.sleep(0.8)
                 screen_cut_nd = self.get_screen_cut_nd()
                 qa = self.ocr_img_to_qa(screen_cut_nd)
+                start = time.time()
                 self.qe.resolve(qa)
+                print("query cost %.2f" % (time.time() - start))
+
+                start = time.time()
+                self.question_file.write(qa.question + "\n")
+                for asw in qa.answer:
+                    self.question_file.write(asw + "\n")
+                self.question_file.write("-----------------------\n")
+                self.question_file.flush()
+                print("save file cost %.2f" % (time.time() - start))
         self.pre_head_wb = head_wb
 
     def wait_for_key(self):
@@ -86,8 +108,15 @@ class answer_assist(object):
     def main(self):
         args = self.build_args()
         os_type = args.os
-        conf = self.load_config(args.config)
+        jieba.initialize()
+
+        # merge conf with custom config yaml
+        c_conf = self.load_yaml(args.custom_config)
+        conf = self.load_yaml(args.config)
+        conf.update(c_conf)
+
         game_type = args.game_type
+        self.question_file = open("data/question.txt","a")
         if game_type == 1:
             self.screen_begin = 180
             self.screen_end = -460
@@ -98,8 +127,8 @@ class answer_assist(object):
         from ocr import baidu
         self.ocr = baidu.baidu_ocr(conf)
         self.gen_device(os_type)
-        #self.qe = sogou_qe()
-        self.qe = baidu_qe()
+        #self.qe = sogou_qe(conf)
+        self.qe = baidu_qe(conf)
 
         if args.img:
             img_nd = decode_from_file(args.img)
@@ -115,7 +144,9 @@ class answer_assist(object):
         if question:
             print("%s" % question)
             qa = load_qa_from_file(question)
+            start = time.time()
             self.qe.resolve(qa)
+            print("query cost %.2f" % (time.time() - start))
             return
 
         while True:
