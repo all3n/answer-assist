@@ -29,6 +29,7 @@ class search_engine(object):
         if self.follow_flag:
             url = url + "%20" + parse.quote(" ".join(self.a).encode('utf-8'))
 
+        #print(url)
         soup_res = BeautifulSoup(requests.get(url=url, headers=self.headers).content, "lxml")
         [s.extract() for s in soup_res(['script', 'style', 'img', 'sup', 'b'])]
         # print(soup.prettify())

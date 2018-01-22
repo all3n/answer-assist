@@ -4,12 +4,13 @@ from collections import namedtuple
 from terminaltables import AsciiTable
 from six.moves import xrange
 import codecs
-QA = namedtuple('QA', ['question', 'answer','answer_tokens','right'])
+QA = namedtuple('QA', ['idx','question', 'answer','answer_tokens','right'])
 import re
 import jieba
 
 
 QA_INDEX_PATTERN = re.compile("\d+/\d+")
+QA_TITLE_NUM_PATTERN = re.compile("^(\d+)\.")
 
 
 def clean(s):
@@ -32,7 +33,6 @@ def load_qa_from_file(f):
 
 
 def gen_qa(sens_list,choice=3,right=-1):
-    print "\n".join(sens_list)
     assert(len(sens_list) > choice)
 
     # TODO remove question index num like 1/12
@@ -41,19 +41,29 @@ def gen_qa(sens_list,choice=3,right=-1):
         sens_list = sens_list[:-1]
 
     q = "".join(clean_list(sens_list[:-choice]))
+    titleNum = QA_TITLE_NUM_PATTERN.match(q)
+    idx = -1
+    if titleNum:
+        idx = int(titleNum.group(1))
+        q = q.replace(titleNum.group(0),"")
+
+
     a = clean_list(sens_list[-choice:])
     answer_tokens = map(lambda x:jieba.cut(x),a)
 
-
-
-    qa = QA(q,a,answer_tokens,right)
+    qa = QA(idx,q,a,answer_tokens,right)
     print_qa(qa)
     return qa
 
 
 def print_qa(qa):
+    if qa.idx != -1:
+        qtitle = 'question:%d' % qa.idx
+    else:
+        qtitle = 'question'
+
     table_data = [
-        ['question', qa.question],
+        [qtitle, qa.question],
     ]
     for i in xrange(len(qa.answer)):
         table_data.append([i+1,qa.answer[i]])

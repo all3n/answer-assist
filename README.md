@@ -32,3 +32,7 @@ baidu-ocr:
     1. python-sdk
         1. https://ai.baidu.com/download?sdkId=3
 
+    2. tesseract
+        1. apt-get install libleptonica-dev libtesseract-dev
+        1. pip install tesseract-ocr pytesseract
+    

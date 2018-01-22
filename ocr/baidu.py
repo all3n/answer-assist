@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from .ocr import ocr
 from aip import AipOcr
+import cv2
 
 # disable warning of not https
 import requests
@@ -21,6 +22,9 @@ class baidu_ocr(ocr):
         self.ocr_client.setConnectionTimeoutInMillis(self.timeout * 1000)
 
     def detext_text(self,image):
+        if type(image).__name__ == 'ndarray':
+            image = cv2.imencode('.png', image)[1].tostring()
+
         result = self.ocr_client.basicGeneral(image, self.options)
         if 'error_code' in result:
             print('baidu api error: ', result['error_msg'])

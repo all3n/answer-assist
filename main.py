@@ -46,6 +46,7 @@ class answer_assist(object):
         self.parser.add_argument('-q','--question',type=str,help='input question file',default=None)
         self.parser.add_argument('-t','--game_type',type=int,help='game type 1 xigua,2 zhishi',default=1)
         self.parser.add_argument('-m','--method',type=int,help='0 auto 1 manual',default=0)
+        self.parser.add_argument('-ocr','--ocr',type=int,help='0 baidu 1 tesseract',default=0)
         self.parser.add_argument('-cc','--custom_config',type=str,help='custom api config file default:~/.config/answer_assist.conf',default='~/.config/answer_assist.conf')
         self.parser.add_argument('-c','--config',type=str,help='custom config file default:conf/app.ini',default='conf/app.ini')
         self.args = self.parser.parse_args()
@@ -53,12 +54,12 @@ class answer_assist(object):
 
     def ocr_img_to_qa(self,img_arr):
         # str
-        encode_img_str = encode_image(img_arr)
-        text_list = self.ocr.detext_text(encode_img_str)
+        text_list = self.ocr.detext_text(img_arr)
         qa = gen_qa(text_list)
         return qa
 
     def try_answer(self,img_arr):
+        self.time_stat = {}
         if img_arr.mean() < 180:
             return
         head_wb = cv2.Canny(img_arr[:int(img_arr.shape[0] / 3)], 40, 60)
@@ -67,11 +68,17 @@ class answer_assist(object):
             if diff > 2.0:
                 # if question change,wait 0.8 s fix xiguan
                 time.sleep(0.8)
+                start = time.time()
                 screen_cut_nd = self.get_screen_cut_nd()
+                self.time_stat["screen-cut"] = time.time() - start
+
+                start = time.time()
                 qa = self.ocr_img_to_qa(screen_cut_nd)
+                self.time_stat["ocr-img-2-qa"] = time.time() - start
+
                 start = time.time()
                 self.qe.resolve(qa)
-                print("query cost %.2f" % (time.time() - start))
+                self.time_stat["query"] = time.time() - start
 
                 start = time.time()
                 self.question_file.write(qa.question + "\n")
@@ -79,7 +86,11 @@ class answer_assist(object):
                     self.question_file.write(asw + "\n")
                 self.question_file.write("-----------------------\n")
                 self.question_file.flush()
-                print("save file cost %.2f" % (time.time() - start))
+                self.time_stat["query"] = time.time() - start
+
+                for tt in self.time_stat:
+                    print("%s:%f s" % (tt,self.time_stat[tt]))
+
         self.pre_head_wb = head_wb
 
     def wait_for_key(self):
@@ -124,8 +135,13 @@ class answer_assist(object):
             self.screen_begin = 180
             self.screen_end = -550
 
-        from ocr import baidu
-        self.ocr = baidu.baidu_ocr(conf)
+        if args.ocr == 0:
+            from ocr import baidu
+            self.ocr = baidu.baidu_ocr(conf)
+        elif args.ocr == 1:
+            from ocr import tesseract
+            self.ocr = tesseract.tesseract_ocr(conf)
+
         self.gen_device(os_type)
         #self.qe = sogou_qe(conf)
         self.qe = baidu_qe(conf)
@@ -142,7 +158,6 @@ class answer_assist(object):
 
         question = args.question
         if question:
-            print("%s" % question)
             qa = load_qa_from_file(question)
             start = time.time()
             self.qe.resolve(qa)

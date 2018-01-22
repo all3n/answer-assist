@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 from multiprocessing import Pool
 import codecs
 import sys
+import re
 from six.moves import range
 reload(sys)
 sys.setdefaultencoding("utf-8")
@@ -13,6 +14,7 @@ from termcolor import colored
 from .search_engine import search_engine
 
 line_split = "=" * 50
+SPACE = re.compile("\s+")
 
 # 爱问
 BEST_ANSWER=u'最佳答案'
@@ -27,14 +29,11 @@ class baidu_qe(search_engine):
             return
 
         op = search_result.find("div",{"class":"result-op"})
-        if op:
-            op_answer = op.find("div",{"class","op_exactqa_s_answer"})
-            if op_answer:
-                print(u"找到百度知识图谱")
-                op_answer_txt = op_answer.text
-                for i in range(len(self.a)):
-                    self.count_freq(op_answer_txt,i,10)
+        op_type = ''
+        op_val = ''
 
+        if op:
+            (op_type,op_val) = self.process_op(op)
 
         #if self.vote:
         #    return
@@ -63,6 +62,36 @@ class baidu_qe(search_engine):
 
                 print(u"content:%s" % (clean_txt))
             print("---------------------------------------")
+        if op_type and op_val:
+            for i in range(len(self.a)):
+                self.count_freq(op_val,i,10)
+            print("%s,%s" % (colored(op_type,"green"),colored(op_val,"red")))
+
+    def process_op(self,op):
+        tpl = op.attrs["tpl"]
+        print("find baidu op:%s" % (tpl))
+        ret = ""
+        if tpl == 'best_answer':
+            ans = op.find("div",{"class":"op_best_answer_content"})
+            ret = ans.text.strip()
+        elif tpl == 'exactqa':
+            ans = op.find("div",{"class":"op_exactqa_s_answer"})
+            ret = ans.text.strip()
+        elif tpl == 'exactqa_detail':
+            ans = op.find("div",{"class":"op_exactqa_detail_s_answer"})
+            ret = ans.text.strip()
+        elif tpl == 'exactqa_family':
+            ans = op.find("div",{"class":"op_exactqa_family_s_answer"})
+            ret = ans.text.strip()
+        elif tpl == 'calculator_html':
+            ans = op.find("div",{"class":"op_new_val_screen_result"})
+            ret = ans.text.strip()
+        elif tpl == 'bk_polysemy':
+            ans = op.find("div",{"class":"c-span-last"}).find("p")
+            ret = ans.text.strip()
+        return (tpl,ret)
+
+
 
 if __name__ == '__main__':
     import sys
