@@ -22,17 +22,24 @@
 
 ## ocr:
     1. baidu ocr:
-        1. 配置文件:~/.config/answer_assist.conf
+        1. https://login.bce.baidu.com/ 开通 OCR 获取相关token
+        1. api配置文件:~/.config/answer_assist.conf
 ```
 baidu-ocr:
     api_id: YOUR_BAIDU_API_ID
     api_key: YOUR_BAIDU_API_KEY
     api_secret: YOUR_BAIDU_API_SECRET
 ```
-    1. python-sdk
-        1. https://ai.baidu.com/download?sdkId=3
+        1. python-sdk
+            1. https://ai.baidu.com/download?sdkId=3
+            1. unzip
+            1. python setup.py install
 
-    2. tesseract
-        1. apt-get install libleptonica-dev libtesseract-dev
-        1. pip install tesseract-ocr pytesseract
+    2. tesseract (Google Open Source OCR)
+        1. debian (deepin)
+            1. apt-get install libleptonica-dev libtesseract-dev
+            1. pip install tesseract-ocr pytesseract
+        1. mac
+            1. brew install leptonic tesseract
+            1. pip install tesseract-ocr pytesseract
     
