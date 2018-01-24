@@ -1,0 +1,65 @@
+<html>
+<head>
+  <script src="https://cdn.bootcss.com/angular.js/1.6.8/angular.min.js"></script>
+  <script src="https://cdn.bootcss.com/angular-websocket/2.0.1/angular-websocket.min.js"></script>
+  <title>Answer Assist</title>
+  <script type="text/javascript">
+    var app = angular.module('answer-assit-app', ['ngWebSocket'])
+    .factory('ans_data',function($websocket){
+        var dataStream = $websocket('ws://localhost:12345');
+        var collection = [];
+        var imgs = []
+        dataStream.onMessage(function(message){
+            //console.log(message)
+            var d = message.data;
+            if(d[0] == '{' && d[d.length-1] == '}'){
+                var jd = JSON.parse(d)
+                console.log(jd);
+                if(jd.type == 'img'){
+                   imgs.push(jd.data); 
+                }
+            }else{
+                collection.push(message.data)
+            }
+            window.scrollTo(0,document.body.scrollHeight);
+        });
+        var methods = {
+            collection: collection,
+            imgs:imgs,
+            get: function(){
+                dataStream.send(JSON.stringify({action:'get'}))
+            },
+            send: function(msg){
+                console.log("ws get "+msg)
+                dataStream.send(JSON.stringify({action:'msg',msg:msg}))
+            }
+        };
+        return methods;
+    }).controller('ans_res_ctl', function($scope,ans_data) {
+            $scope.ans_data = ans_data;
+            $scope.on_send = function(){
+                if($scope.msg){
+                    console.log("send "+ $scope.msg)
+                    ans_data.send($scope.msg)
+                }
+            }
+    });
+  </script>
+</head>
+<body ng-app="answer-assit-app" ng-controller="ans_res_ctl">
+  <h3>Answer Assit</h3>
+  <form ng-submit="on_send()">
+    <input type="text" ng-model="msg" id="input">
+    <input type="submit" value="Send">
+    <button >close</button>
+  </form>
+  <div id="log">
+      <ul ng-repeat="data in ans_data.collection track by $index">
+          <li>{{data }}</li>
+      </ul>
+      <ul ng-repeat="img in ans_data.imgs track by $index">
+          <img data-ng-src="data:image/png;base64,{{img}}"/>
+      </ul>
+  </div>
+</body>
+</html>

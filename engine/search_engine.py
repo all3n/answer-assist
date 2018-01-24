@@ -11,7 +11,9 @@ class search_engine(object):
     top_n = 5
     headers = {'User-Agent': 'Mozilla/5.0 (X11; U; Linux i686)Gecko/20071127 Firefox/2.0.0.11'}
 
-    def __init__(self,conf):
+    def __init__(self,conf,app):
+        self.app = app
+        self.server = app.server
         self.conf = conf
         self.not_words = conf["not-words"]
         self.follow_words = conf["follow-words"]
@@ -40,8 +42,10 @@ class search_engine(object):
        raise NotImplementedError("NOT Impl parse_answer")
 
     def resolve(self,qa):
+        self.qa = qa
         self.q = qa.question
         self.a = qa.answer
+        self.ats = qa.answer_tokens
         self.vote = {}
         soup = self.query_by_url()
         self.parse_answer(soup)
@@ -53,7 +57,7 @@ class search_engine(object):
     def count_freq(self,txt,i,vote=1):
         if not txt:
             return
-        answer_token = self.a[i]
+        answer_token = self.ats[i]
         for at in answer_token:
             c = txt.count(at) * vote
             if c > 0:
@@ -61,6 +65,15 @@ class search_engine(object):
                     self.vote[i] += c
                 else:
                     self.vote[i] = c
+
+        as_vote = txt.count(self.a[i]) * vote
+        if i in self.vote:
+            self.vote[i] += as_vote
+        else:
+            self.vote[i] = as_vote
+
+
+
 
     def print_res(self):
         res_tables = [['option','score','p']]
@@ -72,7 +85,7 @@ class search_engine(object):
             else:
                 right = max(self.vote,key=lambda x:self.vote[x])
             for x in range(len(self.a)):
-                if x in self.vote:
+                if x in self.vote and total > 0:
                     res_tables.append([self.a[x],self.vote[x],(self.vote[x] * 100.0) /total])
                 else:
                     res_tables.append([self.a[x],0,0])
@@ -80,7 +93,12 @@ class search_engine(object):
             table.inner_column_border = True
 
             print(table.table)
-            print("Suggest Answer:%d %s" % (right+1,colored(self.a[right],'yellow')))
+            self.server.send_message_to_all(table.table)
+            if self.vote[right] > 0.3:
+                print("Suggest Answer:%d %s" % (right+1,colored(self.a[right],'yellow')))
+                self.server.send_message_to_all("Suggest Answer:%d %s" % (right+1,self.a[right]))
+            else:
+                print("Can't Answer")
 
 
 

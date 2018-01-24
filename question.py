@@ -4,7 +4,7 @@ from collections import namedtuple
 from terminaltables import AsciiTable
 from six.moves import xrange
 import codecs
-QA = namedtuple('QA', ['idx','question', 'answer','answer_tokens','right'])
+QA = namedtuple('QA', ['idx','question', 'answer','question_tokens','answer_tokens','right'])
 import re
 import jieba
 
@@ -49,9 +49,10 @@ def gen_qa(sens_list,choice=3,right=-1):
 
 
     a = clean_list(sens_list[-choice:])
-    answer_tokens = map(lambda x:jieba.cut(x),a)
+    answer_tokens = map(lambda x:list(jieba.cut(x)),a)
+    question_tokens = list(jieba.cut(q))
 
-    qa = QA(idx,q,a,answer_tokens,right)
+    qa = QA(idx,q,a,question_tokens,answer_tokens,right)
     print_qa(qa)
     return qa
 
@@ -63,12 +64,12 @@ def print_qa(qa):
         qtitle = 'question'
 
     table_data = [
-        [qtitle, qa.question],
+        [qtitle, qa.question," ".join(qa.question_tokens)],
     ]
     for i in xrange(len(qa.answer)):
-        table_data.append([i+1,qa.answer[i]])
+        table_data.append([i+1,qa.answer[i]," ".join(qa.answer_tokens[i])])
     if qa.right != -1:
-        table_data.append(['right',qa.right])
+        table_data.append(['right',qa.right,""])
     table = AsciiTable(table_data)
     table.inner_row_border = True
     print(table.table)

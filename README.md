@@ -40,6 +40,7 @@ baidu-ocr:
             1. apt-get install libleptonica-dev libtesseract-dev
             1. pip install tesseract-ocr pytesseract
         1. mac
-            1. brew install leptonic tesseract
+            1. brew install leptonica
+            1. brew install tesseract --with-serial-num-pack --with-all-languages
             1. pip install tesseract-ocr pytesseract
     

@@ -12,7 +12,7 @@ class android_device(base_device):
 
         # directly read image bytes from pipe
 
-        pipe = subprocess.Popen("adb shell screencap -p",
+        pipe = subprocess.Popen("adb -P 7555 shell screencap -p",
                                 stdin=subprocess.PIPE,
                                 stdout=subprocess.PIPE, shell=True)
         image_bytes = pipe.stdout.read().replace(b'\r\n', b'\n')

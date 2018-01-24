@@ -45,6 +45,8 @@ class baidu_qe(search_engine):
             title = at.find("h3",{"class","t"})
             if title:
                 title = self.clean_res(title.text)
+                for qtk in self.qa.question_tokens:
+                    title = title.replace(qtk,colored(qtk,"green"))
                 print(u"title:%s" % (title))
             content = at.find("div",{"class","c-abstract"})
             if content:
@@ -58,7 +60,11 @@ class baidu_qe(search_engine):
                     v = 5
                 for i in range(len(self.a)):
                     self.count_freq(clean_txt,i,v)
+                    #print self.a[i]
                     clean_txt = clean_txt.replace(self.a[i],colored(self.a[i],"red"))
+                    for tk in self.ats[i]:
+                        for tkw in tk:
+                            clean_txt = clean_txt.replace(tk,colored(tk,"yellow"))
 
                 print(u"content:%s" % (clean_txt))
             print("---------------------------------------")
