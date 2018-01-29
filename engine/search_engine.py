@@ -59,7 +59,7 @@ class search_engine(object):
             return
         answer_token = self.ats[i]
         for at in answer_token:
-            c = txt.count(at) * vote
+            c = txt.count(at)
             if c > 0:
                 if i in self.vote:
                     self.vote[i] += c
@@ -94,7 +94,10 @@ class search_engine(object):
 
             print(table.table)
             self.server.send_message_to_all(table.table)
-            if self.vote[right] > 0.3:
+            if not self.not_flag and  self.vote[right] > 0.34:
+                print("Suggest Answer:%d %s" % (right+1,colored(self.a[right],'yellow')))
+                self.server.send_message_to_all("Suggest Answer:%d %s" % (right+1,self.a[right]))
+            elif self.not_flag and  self.vote[right] < 0.33:
                 print("Suggest Answer:%d %s" % (right+1,colored(self.a[right],'yellow')))
                 self.server.send_message_to_all("Suggest Answer:%d %s" % (right+1,self.a[right]))
             else:

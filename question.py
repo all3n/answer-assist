@@ -40,7 +40,19 @@ def gen_qa(sens_list,choice=3,right=-1):
     if QA_INDEX_PATTERN.match(last):
         sens_list = sens_list[:-1]
 
-    q = "".join(clean_list(sens_list[:-choice]))
+    try:
+        first_ask_signal_index = map(lambda x:'?' in x,sens_list).index(True)
+    except Exception as e:
+        print e
+        first_ask_signal_index = -1
+    print first_ask_signal_index
+    if first_ask_signal_index >= 0:
+        q = "".join(sens_list[:first_ask_signal_index + 1])
+        a = clean_list(sens_list[first_ask_signal_index + 1:first_ask_signal_index+4])
+    else:
+        q = "".join(clean_list(sens_list[:-choice]))
+        a = clean_list(sens_list[-choice:])
+
     titleNum = QA_TITLE_NUM_PATTERN.match(q)
     idx = -1
     if titleNum:
@@ -48,7 +60,6 @@ def gen_qa(sens_list,choice=3,right=-1):
         q = q.replace(titleNum.group(0),"")
 
 
-    a = clean_list(sens_list[-choice:])
     answer_tokens = map(lambda x:list(jieba.cut(x)),a)
     question_tokens = list(jieba.cut(q))
 
